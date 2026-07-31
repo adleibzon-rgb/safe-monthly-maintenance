@@ -1,0 +1,33 @@
+name: Shell checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Bash syntax
+        run: |
+          bash -n install.sh
+          sed -n \
+            "/^cat >\"\\\$work_dir\\/safe-monthly-maintenance\" <<'MAINTENANCE_SCRIPT'$/,/^MAINTENANCE_SCRIPT$/p" \
+            install.sh | sed '1d;$d' > /tmp/safe-monthly-maintenance
+          bash -n /tmp/safe-monthly-maintenance
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck install.sh
+          shellcheck /tmp/safe-monthly-maintenance
